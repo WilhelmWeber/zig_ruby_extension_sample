@@ -1,0 +1,6 @@
+ext/zig-base64/zig-cache/
+ext/zig-base64/.zig-cache/
+ext/zig-base64/zig-out/
+ext/zig-base64/Makefile
+ext/zig-base64/.zls.json
+*.so

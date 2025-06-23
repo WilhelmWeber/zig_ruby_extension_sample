@@ -1,0 +1,1 @@
+require_relative "../ext/zig-base64/zig-out/lib/libzig_rb.so"
