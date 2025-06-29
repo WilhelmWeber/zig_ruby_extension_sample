@@ -37,9 +37,39 @@ fn rb_encode_base64(...) callconv(.C) ruby.VALUE {
     return result;
 }
 
+fn rb_decode_base64(...) callconv(.C) ruby.VALUE {
+    var ap: std.builtin.VaList = @cVaStart();
+    defer @cVaEnd(&ap);
+    const allocator = std.heap.c_allocator;
+
+    const self: ruby.VALUE = @cVaArg(&ap, ruby.VALUE);
+    _ = self;
+
+    // base64文字列
+    const input: ruby.VALUE = @cVaArg(&ap, ruby.VALUE);
+    if (ruby.TYPE(input) != ruby.T_STRING) {
+        return ruby.Qnil;
+    }
+    const ptr = ruby.RSTRING_PTR(input);
+    const len: usize = @intCast(ruby.RSTRING_LEN(input));
+    const str = ptr[0..len];
+
+    // 変換処理
+    const decoded = base64.Decode_base64(str, allocator) catch return ruby.Qnil;
+    const decoded_len: c_long = @intCast(decoded.len);
+
+    const result: ruby.VALUE = ruby.rb_str_new(decoded.ptr, decoded_len);
+    _ = ruby.rb_enc_associate(result, ruby.rb_utf8_encoding());
+    // 安全のために変換後に解放
+    allocator.free(decoded);
+    return result;
+}
+
 export fn Init_libzig_rb() void {
     // ZigRbクラスの登録
     const zig_rb_class: ruby.VALUE = ruby.rb_define_class("ZigRb", ruby.rb_cObject);
     // ZigRb.encode_base64(str)
     _ = ruby.rb_define_method(zig_rb_class, "encode_base64", rb_encode_base64, 1);
+    // ZigRb.decode_base64(str)
+    _ = ruby.rb_define_method(zig_rb_class, "decode_base64", rb_decode_base64, 1);
 }
